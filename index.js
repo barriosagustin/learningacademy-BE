@@ -3,7 +3,7 @@ const multer = require("multer");
 const connectDB = require("./db");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const courses = require("./coursesModel");
+const allCourses = require("./coursesModel");
 const { ObjectId } = require("mongodb");
 
 function setCommonHeaders(req, res, next) {
@@ -34,10 +34,14 @@ app.listen(PORT, () => {
   console.log(`server running in port ${PORT}`);
 });
 
+app.get("/", (req, res) => {
+    res.send("Hello World!");
+  });
+
 //internal courses
 app.get("/api/courses", async (req, res) => {
   try {
-    const courses = await courses.find();
+    const courses = await allCourses.find();
     const coursesWithBase64Image = courses.map((course) => ({
       ...course,
       image: course.image ? course.image.toString("base64") : null,
@@ -53,7 +57,7 @@ app.get("/api/course/:id", async (req, res) => {
     const courseId = req.params.id;
 
     const idConverted = new ObjectId(courseId);
-    const course = await courses.findById(idConverted);
+    const course = await allCourses.findById(idConverted);
 
     if (!course) {
       return res.status(404).json({ message: "Course not found" });
@@ -83,7 +87,7 @@ app.post("/api/createcourse", upload.single("image"), async (req, res) => {
 
     const image = new Buffer.from(imageBuffer, "binary");
 
-    const newCourse = new courses({
+    const newCourse = new allCourses({
       title,
       description,
       instructor,
@@ -112,7 +116,7 @@ app.put("/api/update_value/:videoId", async (req, res) => {
       return res.status(400).json({ message: "Invalid ObjectId" });
     }
 
-    const course = await courses.findOne({ "modules.videos._id": videoId });
+    const course = await allCourses.findOne({ "modules.videos._id": videoId });
 
     if (!course) {
       return res.status(404).json({ message: "Course not found" });
